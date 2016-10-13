@@ -48,8 +48,13 @@ place_spec_on_tree = function(tree, spec, model = "BM", method = "ml") {
 i_place_spec_on_tree_ml = function(tree, spec, model = "BM", mc_cores=1){
 
     new_tip   = setdiff(spec[ , 1], tree$tip.label)
-    trees     = i_add_tip_everywhere(base_tree = tree, new_tip, mc_cores=mc_cores)
-    fits      = lapply(trees, fit_spec_evol, spec = spec, model = model)
+    trees     = i_add_tip_everywhere(base_tree = tree, new_tip)
+    fits      = NA
+    if(mc_cores==1) {
+        fits      = lapply(trees, fit_spec_evol, spec = spec, model = model)
+    } else {
+        fits      = mclapply(trees, fit_spec_evol, spec = spec, model = model, mc.cores=mc_cores)
+    }
     logliks   = sapply(fits, function(x){ as.vector(x$logLik)} )
 
     best_place = names(logliks)[ which(max(logliks) == logliks) ]
@@ -68,11 +73,10 @@ i_place_spec_on_tree_ml = function(tree, spec, model = "BM", mc_cores=1){
 #'
 #' @param base_tree Tree of class "phylo" where the new tip will be grafted.
 #' @param tip_label Name of the new tip. Must be different from the tip labels
-#' @param mc_cores How many cores to run this on
 #' in `base_tree`
 #'
 #' @return
-i_add_tip_everywhere = function(base_tree, tip_label, mc_cores=1){
+i_add_tip_everywhere = function(base_tree, tip_label){
 
     require("phytools")
 
@@ -91,12 +95,7 @@ i_add_tip_everywhere = function(base_tree, tip_label, mc_cores=1){
         class(result) = "phylo"
         return(result)
     }
-    trees = NA
-    if(mc_cores==1) {
-      trees        = mapply(f, nodes, bl_half, SIMPLIFY = FALSE)
-    } else {
-      trees        = parallel::mcmapply(f, nodes, bl_half, SIMPLIFY = FALSE, mc.cores=mc_cores)
-    }
+    trees        = mapply(f, nodes, bl_half, SIMPLIFY = FALSE)
     names(trees) = nodes
     return(trees)
 }

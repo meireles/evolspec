@@ -53,7 +53,7 @@ i_place_spec_on_tree_ml = function(tree, spec, model = "BM", mc_cores=1){
     if(mc_cores==1) {
         fits      = lapply(trees, fit_spec_evol, spec = spec, model = model)
     } else {
-        fits      = mclapply(trees, fit_spec_evol, spec = spec, model = model, mc.cores=mc_cores)
+        fits      = parallel::mclapply(trees, fit_spec_evol, spec = spec, model = model, mc.cores=mc_cores)
     }
     logliks   = sapply(fits, function(x){ as.vector(x$logLik)} )
 

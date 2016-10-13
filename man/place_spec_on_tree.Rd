@@ -17,6 +17,6 @@ the remaining are data. The spectra with unknown placement must be in this}
 \item{method}{Choose "ml" or "bayes"}
 }
 \description{
-Places an ulabebed specrum on a tree
+Places an unlabeled specrum on a tree
 }
 

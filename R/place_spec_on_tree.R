@@ -41,14 +41,20 @@ place_spec_on_tree = function(tree, spec, model = "BM", method = "ml") {
 #' the remaining are data. The spectra with unknown placement must be in this
 #' data.
 #' @param model Choose "BM" or ...
+#' @param mc_cores How many cores to run this on
 #'
 #' @return
 #' @export
-i_place_spec_on_tree_ml = function(tree, spec, model = "BM"){
+i_place_spec_on_tree_ml = function(tree, spec, model = "BM", mc_cores=1){
 
     new_tip   = setdiff(spec[ , 1], tree$tip.label)
     trees     = i_add_tip_everywhere(base_tree = tree, new_tip)
-    fits      = lapply(trees, fit_spec_evol, spec = spec, model = model)
+    fits      = NA
+    if(mc_cores==1) {
+        fits      = lapply(trees, fit_spec_evol, spec = spec, model = model)
+    } else {
+        fits      = parallel::mclapply(trees, fit_spec_evol, spec = spec, model = model, mc.cores=mc_cores)
+    }
     logliks   = sapply(fits, function(x){ as.vector(x$logLik)} )
 
     best_place = names(logliks)[ which(max(logliks) == logliks) ]
@@ -89,9 +95,7 @@ i_add_tip_everywhere = function(base_tree, tip_label){
         class(result) = "phylo"
         return(result)
     }
-
     trees        = mapply(f, nodes, bl_half, SIMPLIFY = FALSE)
     names(trees) = nodes
     return(trees)
 }
-
